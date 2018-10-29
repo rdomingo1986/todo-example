@@ -1,0 +1,7 @@
+<div class="app-todo-container">
+  <app-todo-add (addNewTask)="addNewTask($event)"></app-todo-add>
+  <div class="list-container row">
+    <app-todo-list [tasks]="tasks" (taskDone)="markTaskDone($event)" class="col-6"></app-todo-list>
+    <app-todo-done [done]="done" (taskTodo)="markTaskTodo($event)" class="col-6"></app-todo-done>
+  </div>
+</div>

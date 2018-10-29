@@ -1,0 +1,16 @@
+<div class="app-todo-add-container text-center">
+  <form novalidate (submit)="addTask()">
+    <div class="form-group">
+      <label for="taskInput">Add Task</label>
+      <input
+        type="text"
+        id="taskInput"
+        name="taskInput"
+        class="form-control w-50 my-0 mx-auto"
+        [(ngModel)]="task"
+        #taskInput="ngModel"
+        required />
+    </div>
+    <button type="submit" class="btn btn-primary w-25" [disabled]="taskInput.invalid">Add</button>
+  </form>
+</div>

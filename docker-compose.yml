@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  angular:
+    hostname: localhost
+    container_name: docker-angular-todo-container
+    build: .
+    ports:
+      - 80:80

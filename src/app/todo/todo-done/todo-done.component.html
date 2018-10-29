@@ -1,0 +1,12 @@
+<div class="app-todo-done-container mt-5">
+    <div class="done-list">
+      <h3 class="done-list-heading text-center">
+        Done
+      </h3>
+      <ul>
+        <li class="done-item" *ngFor="let task of done" (click)="markTaskTodo(task)">
+          <span>{{task.description}}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
