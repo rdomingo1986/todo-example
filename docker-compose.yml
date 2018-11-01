@@ -4,6 +4,9 @@ services:
   angular:
     hostname: localhost
     container_name: docker-angular-todo-container
-    build: .
+    build:
+      context: .
+      args:
+        configuration: production
     ports:
       - 80:80

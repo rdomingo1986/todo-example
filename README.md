@@ -29,8 +29,16 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Docker
 
-To create a development or test build using the Dockerfile, use the configuration argument and run `docker build --build-arg configuration=development -t docker-angular-todo:0.0.1-dev .`
+Create a development or test image using the Dockerfile by using the configuration argument and run `docker build --build-arg configuration=development -t docker-angular-todo:0.0.1-dev .`
 
-To create a production build using the Dockerfile, skip the configuration argument as by default it is set as production in the Dockerfile. Run `docker build -t docker-angular-todo:0.0.1-prod .`
+To create a production image using the Dockerfile, skip the configuration argument as by default it is set as production in the Dockerfile. Run `docker build -t docker-angular-todo:0.0.1-prod .`
 
-To 
+Once an image is created, a container can be spawned by running `docker run -p 80:80 --name docker-angular-todo-container docker-angular-todo:0.0.1-dev(prod)`. The `-p` option defines a port mapping which says that port 80 of our container should be mapped to port 80 of the host machine. The `-name` option defines the name of the container. The last part of the command specifies the image to be used to create the container. `-d` option can be used to detach and let the Docker container run in background.
+
+#### Using Docker Compose
+
+Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application’s services. Then, with a single command, you create and start all the services from your configuration. Run `docker-compose build --build-arg configuration=development && docker-compose up` for creating a development build and run shorthand `docker-compose up --build` for a production build.
+
+References:
+- https://docs.docker.com/get-started/
+- https://malcoded.com/posts/angular-docker

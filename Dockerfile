@@ -1,4 +1,4 @@
-# Stage 1, "build" based on Node.js
+# Stage 0, "build" based on Node.js
 FROM node:8.12.0-alpine as build
 
 WORKDIR /usr/src/app
@@ -13,7 +13,7 @@ ARG configuration=production
 
 RUN npm run build -- --configuration $configuration
 
-# Stage 2, based on Nginx, to have only the compiled app, ready for production with Nginx
+# Stage 1, based on Nginx, to have only the compiled app, ready for deployment with Nginx
 FROM nginx:1.15-alpine
 
 COPY --from=build /usr/src/app/dist/angular-todo /usr/share/nginx/html
