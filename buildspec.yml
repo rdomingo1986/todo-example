@@ -9,6 +9,7 @@ phases:
       - codebuild-breakpoint
   pre_build:
     commands:
+      - docker login -u rdomingo1986 -p $DOCKER_HUB_LOGIN
       - aws ecr get-login-password | docker login --username AWS --password-stdin $REPOSITORY_URI
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
