@@ -1,0 +1,32 @@
+version: 0.2            
+phases:
+  install:
+    runtime-versions:
+      nodejs: 12.x
+    commands:
+      #- apt-get update -y
+      #- apt-get upgrade -y
+      - codebuild-breakpoint
+  pre_build:
+    commands:
+      - aws ecr get-login-password | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+    finally:
+      - codebuild-breakpoint
+  build:
+    commands:
+      - docker build -t $REPOSITORY_URI:latest -t $REPOSITORY_URI:$IMAGE_TAG .
+      - codebuild-breakpoint
+  post_build:
+    commands:
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - sed -i 's@REPOSITORY_URI@'$REPOSITORY_URI'@g' template.cluster.yml
+      - sed -i 's@IMAGE_TAG@'$IMAGE_TAG'@g' template.cluster.yml
+      - sed -i 's@TASK_EXECUTION_ARN@'$TASK_EXECUTION_ARN'@g' template.cluster.yml
+      - echo 'DONE'
+
+artifacts:
+  files:
+    - "template.cluster.yml"

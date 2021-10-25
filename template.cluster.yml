@@ -1,0 +1,133 @@
+Parameters:
+  ContainerImage:
+    Type: String
+    Description: The name of the key that will be created
+    Default: REPOSITORY_URI:IMAGE_TAG
+
+  TaskExecutionRole:
+    Type: String
+    Description: The name of the key that will be created
+    Default: TASK_EXECUTION_ARN
+
+  ApplicationName:
+    Type: String
+    Description: The name of the key that will be created
+    Default: mariobross
+
+Resources:
+  EcsCluster:
+    Type: AWS::ECS::Cluster
+
+  EcsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${ApplicationName}
+      RetentionInDays: 731
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  EcsALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ALBServiceSecurityGroup
+      Subnets:
+        - !ImportValue AWSDEVOPS-demo-InstanceSubnetId
+        - !ImportValue AWSDEVOPS-demo-InstanceSubnetId2
+      Type: application
+
+  EcsALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 10
+      Matcher:
+        HttpCode: 200,404
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !ImportValue AWSDEVOPS-demo-VpcId
+
+  EcsALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref EcsALBTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref EcsALB
+      Port: 80
+      Protocol: HTTP
+
+  EcsTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - DockerLabels:
+            name: !Ref ApplicationName
+          Essential: true
+          Image: !Ref ContainerImage
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref EcsLogGroup
+              awslogs-stream-prefix: !Ref ApplicationName
+              awslogs-region: !Ref AWS::Region
+          Name: marioBross
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+      Cpu: "256"
+      ExecutionRoleArn: !Ref TaskExecutionRole
+      Family: !Ref ApplicationName
+      Memory: "1024"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref TaskExecutionRole
+
+  EcsService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - EcsALBListener
+    Properties:
+      Cluster: !Ref EcsCluster
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 3
+      EnableECSManagedTags: false
+      HealthCheckGracePeriodSeconds: 10
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: marioBross
+          ContainerPort: 8080
+          TargetGroupArn: !Ref EcsALBTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref ALBServiceSecurityGroup
+          Subnets:
+            - !ImportValue AWSDEVOPS-demo-PrivateSubnetId
+            - !ImportValue AWSDEVOPS-demo-PrivateSubnetId2
+      ServiceName: !Ref ApplicationName
+      TaskDefinition: !Ref EcsTaskDefinition
+
+  ALBServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue AWSDEVOPS-demo-VpcId
+      GroupDescription: 'Enable HTTP access via port 80'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+Outputs:
+  ALBEndPoint:
+    Value: !GetAtt EcsALB.DNSName
